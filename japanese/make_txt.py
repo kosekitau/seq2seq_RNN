@@ -1,8 +1,9 @@
 from os import listdir, path
 import json
 import collections
+import MeCab
 #対話破綻コーパスから入力応答ペアのテキストデータを生成する
-
+mecab = MeCab.Tagger('-Owakati')
 
 #記事ファイルをダウンロードしたディレクトリから取得する関数を定義する。
 #ダウンロードしたフォルダの名前をjsonにかえ、同じディレクトリに配置する
@@ -33,18 +34,20 @@ length = []
 for i in range(len(sentences)):
   for j in range(len(sentences[i]["turns"])-1):
     #入力と応答でタブ区切り
-    length.append(len(sentences[i]["turns"][j]["utterance"]))
+    #length.append(len(mecab.parse(sentences[i]["turns"][j]["utterance"]).split()))
     data.append(sentences[i]["turns"][j]["utterance"] + '\t' + sentences[i]["turns"][j+1]["utterance"])
 
-print('length: ', len(data))
+#print('length: ', len(data))
 c = collections.Counter(length)
+#print(c)
 
-MAX_LENGTH = 36 #最大単語数(句読点を含む)
+
+MAX_LENGTH = 30 #最大単語数(句読点を含む)
 
 #上記2つの条件を満たすデータのみを抽出
 def filterPair(p):
-    return len(p.split('\t')[0]) < MAX_LENGTH and \
-        len(p.split('\t')[1]) < MAX_LENGTH
+    return len(mecab.parse(p.split('\t')[0])) < MAX_LENGTH and \
+        len(mecab.parse(p.split('\t')[1])) < MAX_LENGTH
 
 def filterPairs(pairs):
     return [pair for pair in pairs if filterPair(pair)]
